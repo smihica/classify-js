@@ -10,19 +10,19 @@ How to remake and test
 minify
 -----------
 
-npm install uglify-js
-make
+ $ npm install uglify-js
+ $ make
 
 
 test
 -----------
 
-npm install nodeunit
-make test
+ $ npm install nodeunit
+ $ make test
 
 
 License
 =======
 
-Mit License
-copyright (c) smihica (Shin Aoyama)
+ Mit License
+ copyright (c) smihica (Shin Aoyama)
