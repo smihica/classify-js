@@ -1,9 +1,9 @@
-UGLIFYJS = ./node_modules/uglify-js/bin/uglifyjs
+UGLIFYJS = uglifyjs
 
 .PHONY:	all clean
 
 all:    classify.js
-	$(UGLIFYJS) classify.js > classify.min.js
+	$(UGLIFYJS) --unsafe -nc -o classify.min.js classify.js
 
 clean:
 	rm -rf classify.min.js
