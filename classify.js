@@ -196,6 +196,7 @@
       }
     }
 
+    // TODO: support recursive user module.
     for (var moduleName in userModules) {
       var def = null;
       if (def = definition[moduleName]) {
@@ -255,8 +256,11 @@
     return __class__;
   };
 
-  classify.module = function(moduleName, fn) {
+  classify.addModule = function addModule(moduleName, fn) {
     userModules[moduleName] = fn;
+  };
+  classify.removeModule = function removeModule(moduleName) {
+    delete userModules[moduleName];
   };
 
   classify.error = {
