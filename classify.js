@@ -150,6 +150,9 @@
 
     if (name instanceof Object && !name instanceof String && definition === void(0)) return classify(genclassid(), name);
 
+    if (!name.match(/^[a-zA-Z_$][a-zA-Z0-9_$]*$/))
+      throw new ArgumentError('You give "' + name + '" as class name. But class name must be a valid variable name in JavaScript.');
+
     var __class__, i, j, l, c, def, type;
 
     var context = {
@@ -188,7 +191,7 @@
       default:
         if (userModules[i]) break;
         throw new ArgumentError(
-          'You gave \'' + i + '\' as definition, but the _class() excepts' +
+          'You gave \'' + i + '\' as definition, but the classify() excepts' +
             ' only "property, method, static, parent, mixin, implement'+((0 < userModuleNames.length) ? ', ' + userModuleNames.join(', ') : '')+'".');
       }
     }
