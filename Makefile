@@ -9,4 +9,4 @@ clean:
 	rm -rf classify.min.js
 
 test:
-	./node_modules/nodeunit/bin/nodeunit ./test
+	./node_modules/nodeunit/bin/nodeunit ./tests/unit
