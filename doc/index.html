@@ -1,0 +1,381 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<title>classifyjs documentation</title>
+<link href="style/prettify.css" type="text/css" rel="stylesheet" />
+<script type="text/javascript" src="style/prettify.js"></script>
+<link href="style/style.css" type="text/css" rel="stylesheet" />
+</head>
+<body onload="prettyPrint()">
+<a href="https://github.com/smihica/classify-js">
+<img style="position: absolute; top: 0; right: 0; border: 0;"
+     src="https://s3.amazonaws.com/github/ribbons/forkme_right_red_aa0000.png" alt="Fork me on GitHub">
+</a>
+<div class="container">
+
+<ol class="menu">
+<li><a href="#basic">基本</a></li>
+<li><a href="#property">プロパティ</a></li>
+<li><a href="#method">メソッド</a></li>
+<li><a href="#classprop">クラスプロパティ・クラスメソッド</a></li>
+<li><a href="#inherit">継承</a></li>
+<li><a href="#mixin">Mix-in</a></li>
+<li><a href="#interface">インターフェース</a></li>
+<li><a href="#meta">メタ定義</a></li>
+</ol>
+
+<div class="topbar">
+<h1>ClassifyJS documentation</h1>
+<ul class="nav">
+<li><a href="http://github.com/smihica/classify-js">Code</a></li>
+<li><a href="">Documentation</a></li>
+</ul>
+</div>
+
+<h3 style="clear: both;">これは何か</h3>
+
+<p>
+<strong>ClassifyJS</strong> はJavascriptのプロトタイプ定義をクラスっぽくかけるようにするライブラリです。<br>
+<strong>ClassifyJS</strong> を使うと、煩雑になりがちなプロトタイプ宣言をシンプルで可読性に優れた形で定義する事が出来ます。<br>
+ライブラリコードも短いため持ち回りやすく、拡張性/柔軟性にすぐれており、十分に高速です。<br>
+よくあるやつですが、主な違いとして<br>
+<ul>
+  <li>なるべく小さくしている事。こういうのは何でも出来るようにしようとして大きくなりがち。これは200行程度</li>
+  <li>メタ定義が出来るので、拡張性がある事。</li>
+  <li>変数をちゃんとコピーする事。</li>
+</ul>
+などが挙げられます。
+</p>
+
+<h3><a name="basic">1. 基本</a></h3>
+<pre class="prettyprint lang-html">&lt;script src=&quot;classify.min.js&quot;&gt;&lt;/script&gt;</pre>
+<p>これでclassify()という関数が定義されます。<br>classify()を使って、以下のようにクラス定義する事が出来ます。</p>
+<pre class="prettyprint lang-js">
+var Worker = classify("Worker", {
+  property: {
+    workedTime: 0
+  }
+});
+var Parttimer = classify("Parttimer", {
+  parent: Worker,
+  property: {
+    hourlyPay: 800
+  },
+  method: {
+    getPay: function() {
+      var p = this.hourlyPay * this.workedTime;
+      this.workedTime = 0;
+      return p;
+    }
+    work: function(time) {
+      this.workedTime += time;
+    }
+  }
+});
+var part = new Parttimer(); // or Parttimer();
+part.work(10);
+part.getPay(); // -> 8000
+</pre>
+
+<h3><a name="property">2. プロパティ</a></h3>
+<ol>
+<li><strong>perperty</strong>で定義出来ます。 </li>
+<li>デフォルトの値は、コンストラクタの直前に自動的に定義されます。 </li>
+<li>オブジェクト系はコピーされるので、インスタンス同士で共有しません。 ...(1)</li>
+<li>メソッドに<strong>init</strong>を書かなければ、作成時にオブジェクトを渡すと自動的にセットされます。...(2)</li>
+</ol>
+<pre class="prettyprint lang-js">
+var Dog = classify("Dog", {
+  property: {
+    name: "",
+    age: 0,
+    children: [] // ... (1) {}も大丈夫
+  }
+});
+var ichi = new Dog({name: "ichi", age: 15}); // ... (2) 自動セット
+var joro = new Dog({name: "jiro", age: 4});
+ichiro.name      //-> "ichiro";
+ichiro.children.push(jiro);
+ichiro.children; //-> [];
+jiro.children;   //-> [];
+</pre>
+
+<h3><a name="method">3. メソッド</a></h3>
+<ol>
+<li> <strong>method</strong> で定義出来ます。</li>
+<li> <strong>init</strong> はコンストラクタになります。</li>
+<li> <strong>init</strong>が無ければデフォルトのもの (オブジェクトを代入するもの) が呼ばれます。</li>
+</ol>
+<pre class="prettyprint lang-js">
+var Dog = classify("Dog", {
+  property: { /* */ },
+  method: {
+    init: function(name, age) {
+      this.name = name;
+      this.age = age;
+    },
+    setChild: function(c) {
+      if (!this.isParentOf(c)) this.children.push(c);
+    },
+    setParent: function(p) {
+      if (!this.isChildOf(p)) p.setChild(this);
+    },
+    isChildOf: function(p) {
+      return -1 < p.children.indexOf(this);
+    },
+    isParentOf: function(c) {
+      return -1 < this.children.indexOf(c);
+    }
+  }
+});
+var ichi = new Dog("ichi", 15);
+var joro = new Dog("jiro", 4);
+jiro.setParent(ichi);
+
+ichi.isParentOf(jiro); // true
+jiro.isChildOf(ichi); // true
+</pre>
+
+<h3><a name="classprop">4. クラスプロパティ・クラスメソッド</a></h3>
+<ol>
+<li> <strong>static</strong> で定義出来ます。</li>
+<li> クラスにつき1つです。</li>
+<li> クラスのコンストラクタのプロパティに追加されるだけです。</li>
+</ol>
+
+<pre class="prettyprint lang-js">
+var Dog = classify("Dog", {
+  static: {
+    voice: "wanwan!",
+    hoeru: function() {
+      alert(this.voice);
+    }
+  },
+  method: {
+    /* ... */
+    wan: function() {
+      Dog.hoeru();
+    }
+  },
+});
+var ichi = new Dog("ichi", 15);
+ichi.wan(); // wanwan!
+</pre>
+
+<h3><a name="inherit">5. 継承</a></h3>
+<ol>
+<li> <strong>parent</strong>で継承出来ます。</li>
+<li> 継承は1つです。多重継承は出来ません（代わりにmix-inがあります）</li>
+<li> this.__super__() で parentのprototypeが取れます。</li>
+</ol>
+
+<pre class="prettyprint lang-js">
+var Life = classify("Life", { /* ... */ });
+var Animal = classify("Animal", {
+  parent: Life,
+  method: {
+    init: function() { console.log("Animal Init"); },
+    breath: function() { console.log("breath"); }
+  }
+});
+var Dog = classify("Dog", {
+  parent: Animal,
+  method:   {
+    init: function() {
+      this.__super__().init.apply(this, arguments); // Animal Init;
+    }
+  }
+});
+
+var d = Dog();
+d instanceof Life; // -> true
+d.breath();        // breath
+</pre>
+
+<h3><a name="mixin">6. Mix-in</a></h3>
+<ol>
+<li> <strong>mixin</strong> でMix-in出来ます。</li>
+<li> <strong>mixin</strong> は配列で1つまたは複数指定できます。</li>
+</ol>
+
+<pre class="prettyprint lang-js">
+var Logger = classify("Logger", {
+  method: {
+    logout: function(msg) {
+      console.log(this.className + "." + arguments.caller.name + "() - " + msg);
+    }
+  }
+});
+var Dog = classify("Dog", {
+  mixin: [Logger],
+  method:   {
+    hoeru: function() {
+      this.logout("wanwan !!");
+    }
+  }
+});
+var Reaju = classify("Reaju", {
+  mixin: [Logger],
+  method: {
+    hoeru: function() {
+      this.logout("weeeeei !!");
+    }
+  }
+});
+
+var d = Dog();
+var r = Reaju();
+d.hoeru(); // Dog.hoeru()   -> wanwan !!
+r.hoeru(); // Reaju.hoeru() -> weeeeei !!
+</pre>
+
+<h3><a name="interface">7. インターフェース</a></h3>
+<ol>
+<li> <strong>implement</strong> でインターフェースを指定出来ます。</li>
+<li> インターフェースの実体は普通のクラスです。配列で1つまたは複数指定できます。</li>
+</ol>
+
+<pre class="prettyprint lang-js">
+var AnimalInterface = classify("AnimalInterface", {
+  method: {
+    setChild: function(c)   {}, // used as an interface function.
+    setParent: function(p)  {},
+    isChildOf: function(p)  {},
+    isParentOf: function(c) {}
+  }
+});
+
+var Dog = classify("Dog", {
+  implement: [AnimalInterface],
+  // ... isParentOf() is forgot.
+  method: {
+    setChild: function(c)  { /* ... */ },
+    setParent: function(p) { /* ... */ },
+    isChildOf: function(p) { /* ... */ }
+  }
+});
+//    ->>
+//    DeclarationError: The class 'Dog' must provide property or method
+//    'isParentOf()' imposed by AnimalInterface.
+//
+</pre>
+
+<h3><a name="meta">8. メタ定義</a></h3>
+<ol>
+<li>ユーザー定義による拡張が出来ます。</li>
+<li><strong>classify.addModule(moduleName, fn)</strong></li>
+<li><strong>classify.removeModule(moduleName, fn)</strong></li>
+</ol>
+
+<pre class="prettyprint lang-js">
+// 基本的な使い方。
+classify.addModule("moduleName", function(context, key, value) {});
+/* 第一引数に、定義するmoduleのキーワードを入れてください。
+   第二引数には、クラス定義の変換関数を書きます。
+   変数contextにclassify()に渡されるクラス定義オブジェクトが入ってきます。
+   クラスを作る前に、これをいじってしまうというわけです。
+   key/valueが定義するモジュール名に与えられたオブジェクトのペアです。 */
+
+// 例えば、以下が、アクセサを定義するmoduleです。
+classify.addModule("accessor", function(context, key, value) {
+
+  // _'key' という名前のpropertyを定義します。
+  context.property['_'+key] = value;
+
+  // 'key' という名前のmethodを定義します。
+  context.method[key] = function (v) {
+    if (0 < arguments.length) {
+      context.property['_'+key] = v;
+    }
+    return context.property['_'+key];
+  };
+
+  // context を改造したら返す必要があります。
+  return context;
+
+});
+
+// このようにすると、以下のような定義が
+var A = classify("A", {
+  accessor: {
+    prop: "prop"
+  }
+});
+
+// 実際は以下のように展開されます。
+var A = classify("A", {
+  property: {
+    _prop: "prop",
+  },
+  method: {
+    prop: function(v) {
+      if (0 < arguments.length) {
+        this._porp = v;
+      }
+      return this._porp;
+    }
+  }
+});
+
+// accessorを作ると、setter/getterが自動定義出来るわけです。
+
+var a = new A();
+
+a.prop(10); // setterを呼び出す
+a.prop();   // getterを呼び出す -> 10
+
+// moduleはremoveModuleで削除出来ます。
+classify.removeModule("accessor");
+
+
+/*
+ ユーザー定義は再帰出来ます。
+ すなわち,
+*/
+
+classify.addModule("accessors", function(context, key, value) {
+  context["accessor"] = context["accessor"] || {};
+  for (var i=value-1; -1 < i; i--) {
+    context["accessor"][key+i] = key+i;
+  }
+  return context;
+});
+
+/*
+  のようなことができ
+*/
+
+// 以下のようにすると
+var A = classify("A", {
+  accessors: {
+    xxx: 3
+  }
+});
+
+// 以下のようになり
+var A = classify("A", {
+  accessor: {
+    xxx0: "xxx0",
+    xxx1: "xxx1",
+    xxx2: "xxx2"
+  }
+});
+
+// 最終的に以下のようになります。
+var A = classify("A", {
+  property: {
+    _xxx0: "xxx0",
+    /* ... */
+  },
+  method: {
+    xxx0: function(v) { /* ... */ },
+    /* ... */
+  }
+});
+
+</pre>
+
+</div>
+</body>
+</html>

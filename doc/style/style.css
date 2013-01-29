@@ -1,0 +1,54 @@
+* {
+}
+
+html {
+    width: 100%;
+    min-height: 100%;
+}
+
+body {
+    min-height: 100%;
+    background: #EEE;
+    font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+    font-size: 13px;
+    line-height: 25px;
+    color: #444;
+    margin: 0; padding: 0;
+}
+
+pre {
+    border: 1px solid #000;
+    width: auto;
+    _width: 90%;
+    overflow: auto;
+    _overflow: scroll;
+    font-family: 'Lucida Console', 'Courier', monospace;
+}
+
+.container {
+    border-left: 1px dotted #666;
+    border-right: 1px dotted #666;
+    background: white;
+    width: 900px;
+    margin: 0 auto 0 auto;
+    padding: 20px;
+}
+
+.nav {
+    float: left;
+}
+
+.menu {
+    float: right;
+    width: 250px;
+    border: 1px solid #666;
+    padding-left: 20px;
+}
+
+.menu li {
+    margin-left: 10px;
+}
+
+h3 {
+    line-height: 150%;
+}
