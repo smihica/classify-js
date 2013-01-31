@@ -1,4 +1,4 @@
-var module = require('../classify.js');
+var module = require('../../classify.js');
 var classify = module.classify;
 
 var Worker = classify("Worker", {

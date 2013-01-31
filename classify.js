@@ -2,7 +2,7 @@
   copyright (c) smihica.
   Mit license
 */
-(function(window) {
+(function(w) {
 
   function randomAscii(len) {
     for(var rt='';0<len;len--) rt += String.fromCharCode(32+Math.round(Math.random()*94));
@@ -24,20 +24,11 @@
     return exceptionClass;
   };
 
-  var NotImplemented   = createExceptionClass('NotImplemented');
-  var ValueError       = createExceptionClass('ValueError');
-  var PropertyError    = createExceptionClass('PropertyError');
-  var NotSupported     = createExceptionClass('NotSupported');
-  var NotAttached      = createExceptionClass('NotAttached');
-  var NotFound         = createExceptionClass('NotFound');
-  var AlreadyExists    = createExceptionClass('AlreadyExists');
-  var AssertionFailure = createExceptionClass('AssertionFailure');
   var ArgumentError    = createExceptionClass('ArgumentError');
   var DeclarationError = createExceptionClass('DeclarationError');
 
   // test the obj is atomic or not.
-  function _atomic_p(obj) {
-    var t;
+  function _atomic_p(obj, t) {
     return ( obj === null || obj === void(0) ||
              (t = typeof obj) === 'number' ||
              t === 'string' ||
@@ -74,16 +65,13 @@
     return clone;
   };
 
-  var genclassid = (function() {
-    var id = 0;
+  var genclassid = (function(i) {
     return function genclassid() {
-      ++id;
-      var ret = "ANONYMOUS_CLASS_"+id;
-      return ret;
+      return "ANONYMOUS_CLASS_"+(++i);
     };
-  })();
+  })(0);
 
-  var init_instance_origin_props = randomAscii(64);
+  var iop = randomAscii(64);
 
   function __super__() {
     return this.constructor.__super__.prototype;
@@ -98,10 +86,10 @@
     _class.prototype = new f();
     _class.prototype.__super__ = __super__;
 
-    var iiop = _class[init_instance_origin_props];
+    var iiop = _class[iop];
 
-    _class[init_instance_origin_props] = function(inst) {
-      var parent_iiop = parent[init_instance_origin_props];
+    _class[iop] = function(inst) {
+      var parent_iiop = parent[iop];
       if (parent_iiop) parent_iiop(inst);
       iiop(inst);
     };
@@ -124,9 +112,9 @@
       }
     }
 
-    var iiop = _class[init_instance_origin_props];
-    _class[init_instance_origin_props] = function(inst) {
-      var include_iiop = include[init_instance_origin_props];
+    var iiop = _class[iop];
+    _class[iop] = function(inst) {
+      var include_iiop = include[iop];
       if (include_iiop) include_iiop(inst);
       iiop(inst);
     };
@@ -146,16 +134,14 @@
   };
 
   var userModules = {};
-  var classify = function classify(name, definition) {
+  var classify = function classify(name, def) {
 
-    if (name instanceof Object && !name instanceof String && definition === void(0)) return classify(genclassid(), name);
+    if (name instanceof Object && !name instanceof String && def === void(0)) return classify(genclassid(), name);
 
     if (!name.match(/^[a-zA-Z_$][a-zA-Z0-9_$]*$/))
       throw new ArgumentError('You give "' + name + '" as class name. But class name must be a valid variable name in JavaScript.');
 
-    var __class__, i, j, l, c, def, type;
-
-    var context = {
+    var __class__, i, j, l, k, c, def, type, base, modulenames, rec, context = {
       property:   {},
       static:     {},
       method:     {},
@@ -164,53 +150,36 @@
       implement:  []
     };
 
-    var userModuleNames = [];
-    for (var moduleName in userModules) userModuleNames.push(moduleName);
+    modulenames = [];
+    for (i in userModules) modulenames.push(i);
 
-    for (i in definition) {
-      switch (i) {
-      case "property":
-        def = definition[i];
-        for (j in def) context.property[j] = def[j];
-        break;
-      case "static":
-        context.static = definition[i];
-        break;
-      case "method":
-        context.method = definition[i];
-        break;
-      case "parent":
-        context.parent = definition[i];
-        break;
-      case "mixin":
-        context.mixin = definition[i];
-        break;
-      case "implement":
-        context.implement = definition[i];
-        break;
-      default:
-        if (userModules[i]) break;
-        throw new ArgumentError(
+    base = "property,static,method,parent,mixin,implement".split(',');
+
+    while (1) {
+      rec = false;
+
+      for (i in def)
+        if (0 <= base.indexOf(i)) context[i] = def[i];
+        else if (0 <= modulenames.indexOf(i)) rec = true;
+        else throw new ArgumentError(
           'You gave \'' + i + '\' as definition, but the classify() excepts' +
-            ' only "property, method, static, parent, mixin, implement'+((0 < userModuleNames.length) ? ', ' + userModuleNames.join(', ') : '')+'".');
-      }
-    }
+            ' only "' + base.concat(modulenames).join(', ') + '".');
 
-    // TODO: support recursive user module.
-    for (var moduleName in userModules) {
-      var def = null;
-      if (def = definition[moduleName]) {
-        var fn = userModules[moduleName]
-        for (var k in def) {
-          context = fn(context, k, def[k]);
+      if (!rec) break;
+
+      for (i in userModules)
+        if (def[i]) {
+          for (k in def[i]) context = userModules[i](context, k, def[i][k]);
+          delete def[i]; // for recursive module definition.
         }
-      }
+
+      def = context;
     }
 
     var inner_new_call_identifier = randomAscii(64);
     eval("__class__ = function " + name + "(arg) {" +
       "if (this.constructor === " + name + ") {" +
-         name + "['" + init_instance_origin_props + "'](this);" +
+         name + "['" + iop + "'](this);" +
          "if (arg !== '" + inner_new_call_identifier + "') " +
          (('init' in context.method) ? "this.init.apply(this, arguments);" : "_clone(arg, this);") +
          "return this;" +
@@ -221,12 +190,11 @@
     "}");
 
     // TODO optimization.
-    __class__[init_instance_origin_props] =
-      function(inst) {
-        for (var p in context.property) {
-          inst[p] = _clone(context.property[p]);
-        }
-      };
+    __class__[iop] = function(inst) {
+      for (var p in context.property) {
+        inst[p] = _clone(context.property[p]);
+      }
+    };
 
     inherits(__class__, context.parent);
 
@@ -265,21 +233,13 @@
 
   classify.error = {
     ClassifyError    : ClassifyError,
-    NotImplemented   : NotImplemented,
-    ValueError       : ValueError,
-    PropertyError    : PropertyError,
-    NotSupported     : NotSupported,
-    NotAttached      : NotAttached,
-    NotFound         : NotFound,
-    AlreadyExists    : AlreadyExists,
-    AssertionFailure : AssertionFailure,
     ArgumentError    : ArgumentError,
     DeclarationError : DeclarationError
   };
 
-  window.classify = classify;
+  w.classify = classify;
 
   // for node.js
-  if (window.exports) exports.classify = window.classify;
+  if (w.exports) exports.classify = w.classify;
 
 })(this);
