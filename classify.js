@@ -98,7 +98,6 @@
   };
 
   function method(_class, name, func) {
-    func.__class__ = _class;
     _class.prototype[name] = func;
   };
 
@@ -127,13 +126,57 @@
           throw new DeclarationError(
             'The class \'' + _class['@CLASSNAME'] +
               '\' must provide property or method \'' + i +
-              '\' imposed by \'' + impl['@CLASSNAME'] +'".');
+              '\' imposed by \'' + impl['@CLASSNAME'] +"'.");
         }
       }
     }
   };
 
+  function hasProp (d) {
+    for (var p in d)
+      if (d.hasOwnProperty(p)) return true;
+    return false;
+  }
+
   var userModules = {};
+
+  function expand (context, def) {
+    var i, k, t, modulenames = [],
+    base = "property,static,method,parent,mixin,implement".split(',');
+    for (i in userModules) modulenames.push(i);
+
+    while (1) {
+      var rec = false;
+
+      for (i in def) {
+        if (0 <= base.indexOf(i)) context[i] = def[i];
+        else if (0 <= modulenames.indexOf(i)) {
+          if (hasProp(def[i])) rec = true;
+        } else throw new ArgumentError(
+          'You gave \'' + i + '\' as definition, but the classify() excepts' +
+            ' only "' + base.concat(modulenames).join(', ') + '".');
+      }
+
+      if (!rec) break;
+
+      for (i in userModules) context[i] = context[i] || {};
+      for (i in userModules) {
+        t = 0;
+        for (k in def[i]) {
+          if (t == 0) context = userModules[i].one_time_fn(context);
+          if (context) context = userModules[i](context, k, def[i][k]);
+          if (!context) throw new DeclarationError('modules must return context. on module "' + i + '"');
+          delete def[i][k]; // for recursive module definition.
+          t++;
+        }
+      }
+
+      def = context;
+    }
+
+    return context;
+  };
+
   var classify = function classify(name, def) {
 
     if (name instanceof Object && !name instanceof String && def === void(0)) return classify(genclassid(), name);
@@ -141,7 +184,7 @@
     if (!name.match(/^[a-zA-Z_$][a-zA-Z0-9_$]*$/))
       throw new ArgumentError('You give "' + name + '" as class name. But class name must be a valid variable name in JavaScript.');
 
-    var __class__, i, j, l, k, c, def, type, base, modulenames, rec, context = {
+    var __class__, i, j, l, k, c, def, type, context = {
       property:   {},
       static:     {},
       method:     {},
@@ -150,31 +193,7 @@
       implement:  []
     };
 
-    modulenames = [];
-    for (i in userModules) modulenames.push(i);
-
-    base = "property,static,method,parent,mixin,implement".split(',');
-
-    while (1) {
-      rec = false;
-
-      for (i in def)
-        if (0 <= base.indexOf(i)) context[i] = def[i];
-        else if (0 <= modulenames.indexOf(i)) rec = true;
-        else throw new ArgumentError(
-          'You gave \'' + i + '\' as definition, but the classify() excepts' +
-            ' only "' + base.concat(modulenames).join(', ') + '".');
-
-      if (!rec) break;
-
-      for (i in userModules)
-        if (def[i]) {
-          for (k in def[i]) context = userModules[i](context, k, def[i][k]);
-          delete def[i]; // for recursive module definition.
-        }
-
-      def = context;
-    }
+    context = expand(context, def);
 
     var inner_new_call_identifier = randomAscii(64);
     eval("__class__ = function " + name + "(arg) {" +
@@ -208,6 +227,7 @@
       }
     }
     __class__.prototype.constructor = __class__;
+    __class__.prototype.__class__ = __class__;
 
     __class__['@CLASSNAME'] = name;
 
@@ -224,12 +244,14 @@
     return __class__;
   };
 
-  classify.addModule = function addModule(moduleName, fn) {
+  classify.addModule = function addModule(moduleName, fn, ofn) {
+    fn.one_time_fn = ofn || function(c){return c};
     userModules[moduleName] = fn;
   };
   classify.removeModule = function removeModule(moduleName) {
     delete userModules[moduleName];
   };
+  classify.expand = expand;
 
   classify.error = {
     ClassifyError    : ClassifyError,

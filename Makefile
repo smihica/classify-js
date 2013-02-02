@@ -4,6 +4,7 @@ UGLIFYJS = uglifyjs
 
 all:    classify.js
 	$(UGLIFYJS) --unsafe -nc -o classify.min.js classify.js
+	cp classify.min.js doc/classify.min.js
 
 clean:
 	rm -rf classify.min.js

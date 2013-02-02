@@ -23,6 +23,7 @@ pre {
     overflow: auto;
     _overflow: scroll;
     font-family: 'Lucida Console', 'Courier', monospace;
+    line-height: 140%;
 }
 
 .container {
@@ -50,5 +51,36 @@ pre {
 }
 
 h3 {
+    font-size: 150%;
+    line-height: 160%;
+}
+h4 {
+    font-size: 130%;
     line-height: 150%;
 }
+
+.run-button {
+    -moz-box-shadow:inset 0px 1px 0px 0px #ff857a;
+    -webkit-box-shadow:inset 0px 1px 0px 0px #ff857a;
+    box-shadow:inset 0px 1px 0px 0px #ff857a;
+    background-color:#c2160a;
+    -moz-border-radius:6px;
+    -webkit-border-radius:6px;
+    border-radius:6px;
+    border:1px solid #d65145;
+    display:inline-block;
+    color:#ffffff;
+    font-family:arial;
+    font-size:13px;
+    font-weight:bold;
+    padding:2px 20px;
+    text-decoration:none;
+    text-shadow:1px 1px 0px #a63028;
+    cursor: pointer;
+}.run-button:hover {
+    background-color:#ff1c1c;
+}.run-button:active {
+    position:relative;
+    top:1px;
+}
+

@@ -6,6 +6,8 @@
 <link href="style/prettify.css" type="text/css" rel="stylesheet" />
 <script type="text/javascript" src="style/prettify.js"></script>
 <link href="style/style.css" type="text/css" rel="stylesheet" />
+<script type="text/javascript" src="./classify.min.js"></script>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.9.0/jquery.min.js"></script>
 </head>
 <body onload="prettyPrint()">
 <a href="https://github.com/smihica/classify-js">
@@ -67,22 +69,22 @@ var Parttimer = classify("Parttimer", {
       var p = this.hourlyPay * this.workedTime;
       this.workedTime = 0;
       return p;
-    }
+    },
     work: function(time) {
       this.workedTime += time;
     }
   }
 });
-var part = new Parttimer(); // or Parttimer();
+var part = Parttimer(); // or new Parttimer();
 part.work(10);
-part.getPay(); // -> 8000
+alert(part.getPay()); // -> 8000
 </pre>
 
 <h3><a name="property">2. プロパティ</a></h3>
 <ol>
 <li><strong>perperty</strong>で定義出来ます。 </li>
-<li>デフォルトの値は、コンストラクタの直前に自動的に定義されます。 </li>
-<li>オブジェクト系はコピーされるので、インスタンス同士で共有しません。 ...(1)</li>
+<li>デフォルトの値は、インスタンス生成の直前に自動的にセットされます。 </li>
+<li>セット時にコピーされるので、インスタンス同士で共有しません。 ...(1)</li>
 <li>メソッドに<strong>init</strong>を書かなければ、作成時にオブジェクトを渡すと自動的にセットされます。...(2)</li>
 </ol>
 <pre class="prettyprint lang-js">
@@ -90,15 +92,15 @@ var Dog = classify("Dog", {
   property: {
     name: "",
     age: 0,
-    children: [] // ... (1) {}も大丈夫
+    children: [] // ... (1)
   }
 });
 var ichi = new Dog({name: "ichi", age: 15}); // ... (2) 自動セット
-var joro = new Dog({name: "jiro", age: 4});
-ichiro.name      //-> "ichiro";
-ichiro.children.push(jiro);
-ichiro.children; //-> [];
-jiro.children;   //-> [];
+var jiro = new Dog({name: "jiro", age: 4});
+alert(ichi.name);
+ichi.children.push(jiro);
+alert(ichi.children.length); // ... (1)
+alert(jiro.children.length); // ... (1)
 </pre>
 
 <h3><a name="method">3. メソッド</a></h3>
@@ -109,7 +111,11 @@ jiro.children;   //-> [];
 </ol>
 <pre class="prettyprint lang-js">
 var Dog = classify("Dog", {
-  property: { /* */ },
+  property: { /*@...
+     name: "",
+     age: 0,
+     children: []
+  @*/ },
   method: {
     init: function(name, age) {
       this.name = name;
@@ -130,11 +136,11 @@ var Dog = classify("Dog", {
   }
 });
 var ichi = new Dog("ichi", 15);
-var joro = new Dog("jiro", 4);
+var jiro = new Dog("jiro", 4);
 jiro.setParent(ichi);
 
-ichi.isParentOf(jiro); // true
-jiro.isChildOf(ichi); // true
+alert(ichi.isParentOf(jiro)); // true
+alert(jiro.isChildOf(ichi)); // true
 </pre>
 
 <h3><a name="classprop">4. クラスプロパティ・クラスメソッド</a></h3>
@@ -175,59 +181,60 @@ var Life = classify("Life", { /* ... */ });
 var Animal = classify("Animal", {
   parent: Life,
   method: {
-    init: function() { console.log("Animal Init"); },
-    breath: function() { console.log("breath"); }
+    init: function() { alert("init Animal"); },
+    breath: function() { return "su-su-ga-!"; }
   }
 });
 var Dog = classify("Dog", {
   parent: Animal,
   method:   {
     init: function() {
-      this.__super__().init.apply(this, arguments); // Animal Init;
+      this.__super__().init.apply(this, arguments); // init Animal
     }
   }
 });
 
 var d = Dog();
-d instanceof Life; // -> true
-d.breath();        // breath
+alert(d instanceof Life); // true
+alert(d.breath());        // su-su-ga-!
 </pre>
 
-<h3><a name="mixin">6. Mix-in</a></h3>
+<h3><a name="mixin">6. ミックスイン</a></h3>
 <ol>
-<li> <strong>mixin</strong> でMix-in出来ます。</li>
+<li> <strong>mixin</strong> でミックスイン出来ます。</li>
 <li> <strong>mixin</strong> は配列で1つまたは複数指定できます。</li>
 </ol>
 
 <pre class="prettyprint lang-js">
 var Logger = classify("Logger", {
   method: {
-    logout: function(msg) {
-      console.log(this.className + "." + arguments.caller.name + "() - " + msg);
+    notificate : function(msg) {
+      console.log(this.__class__);
+      alert(this.__class__.name + "." + arguments.callee.caller.name + "()\t-> " + msg);
     }
   }
 });
 var Dog = classify("Dog", {
-  mixin: [Logger],
+  mixin: [Logger],                  // ... mix-in
   method:   {
-    hoeru: function() {
-      this.logout("wanwan !!");
+    hoeru: function hoeru() {
+      this.notificate("wanwan !!");
     }
   }
 });
-var Reaju = classify("Reaju", {
-  mixin: [Logger],
+var Reajuu = classify("Reajuu", {
+  mixin: [Logger],                  // ... mix-in
   method: {
-    hoeru: function() {
-      this.logout("weeeeei !!");
+    otakebi: function otakebi() {
+      this.notificate("weeeeei !!");
     }
   }
 });
 
 var d = Dog();
-var r = Reaju();
-d.hoeru(); // Dog.hoeru()   -> wanwan !!
-r.hoeru(); // Reaju.hoeru() -> weeeeei !!
+var r = Reajuu();
+d.hoeru();   // Dog.hoeru()   -> wanwan !!
+r.otakebi(); // Reaju.hoeru() -> weeeeei !!
 </pre>
 
 <h3><a name="interface">7. インターフェース</a></h3>
@@ -239,72 +246,116 @@ r.hoeru(); // Reaju.hoeru() -> weeeeei !!
 <pre class="prettyprint lang-js">
 var AnimalInterface = classify("AnimalInterface", {
   method: {
-    setChild: function(c)   {}, // used as an interface function.
+    // used as interface functions.
+    setChild: function(c)   {},
     setParent: function(p)  {},
     isChildOf: function(p)  {},
     isParentOf: function(c) {}
   }
 });
-
-var Dog = classify("Dog", {
-  implement: [AnimalInterface],
-  // ... isParentOf() is forgot.
-  method: {
-    setChild: function(c)  { /* ... */ },
-    setParent: function(p) { /* ... */ },
-    isChildOf: function(p) { /* ... */ }
-  }
-});
-//    ->>
-//    DeclarationError: The class 'Dog' must provide property or method
-//    'isParentOf()' imposed by AnimalInterface.
-//
+try {
+  var Dog = classify("Dog", {
+    implement: [AnimalInterface],
+    method: {
+      setChild: function(c)  { /* ... */ },
+      setParent: function(p) { /* ... */ },
+      isChildOf: function(p) { /* ... */ }
+      // isParentOf() is forgoten ...
+    }
+  });
+} catch (e) {
+  alert(e.toString());
+}
+</pre>
+これで、定義時にDeclarationErrorが発生して知らせてくれます。
+<pre class="prettyprint red">
+DeclarationError: The class 'Dog' must provide property or method 'isParentOf' imposed by 'AnimalInterface'.
+</pre>
+<h3><a name="meta">8. メタ定義</a></h3>
+ユーザー定義による拡張が出来ます。<br>
+メタ定義を使うと、複雑なクラスが簡潔に作れるようになり、<br>
+プログラムによるプログラミング（メタプログラミング）が行えます。<br>
+<h4>8.1. メタ定義関数</h4>
+モジュール追加<br>
+<strong>classify.addModule(moduleName, fn)</strong><br>
+モジュール削除<br>
+<strong>classify.removeModule(moduleName, fn)</strong><br>
+<h4>8.2. 基本的な使い方</h4>
+<pre class="prettyprint lang-js no-run">
+classify.addModule("moduleName", function(context, key, value) {}, /* optional: function(context) {} */);
 </pre>
 
-<h3><a name="meta">8. メタ定義</a></h3>
-<ol>
-<li>ユーザー定義による拡張が出来ます。</li>
-<li><strong>classify.addModule(moduleName, fn)</strong></li>
-<li><strong>classify.removeModule(moduleName, fn)</strong></li>
-</ol>
-
+第1引数に、定義するmoduleの名前を入れてください。<br>
+第2引数には、クラス定義の変換関数を書きます。<br>
+この変換関数の引数contextに classify( <strong>{...}</strong> ) に渡されるクラス定義オブジェクトが入ってきます。<br>
+実際にクラスを作る前に、これをいじってしまうというわけです。<br>
+引数key/valueが定義するモジュール名に与えられたオブジェクトのペアです。<br>
+第3引数には、オプションで、各モジュールにつき一回実行される変換関数を書きます。<br>
+定義された場合は、各モジュールが見つかった時点で始めに実行されます。<br>
+<h4>8.3. 実用例1 | アクセサの自動定義</h4>
+例えば、プロパティーに変数と、その変数へのアクセサメソッドを定義したかったとします。<br>
 <pre class="prettyprint lang-js">
-// 基本的な使い方。
-classify.addModule("moduleName", function(context, key, value) {});
-/* 第一引数に、定義するmoduleのキーワードを入れてください。
-   第二引数には、クラス定義の変換関数を書きます。
-   変数contextにclassify()に渡されるクラス定義オブジェクトが入ってきます。
-   クラスを作る前に、これをいじってしまうというわけです。
-   key/valueが定義するモジュール名に与えられたオブジェクトのペアです。 */
-
-// 例えば、以下が、アクセサを定義するmoduleです。
+var AClass = classify("AClass", {
+  property: {
+    _prop: "prop", // 変数prop
+  },
+  method: {
+    prop: function(v) { // propへのアクセサメソッド
+      if (0 < arguments.length) {
+        this._prop = v;
+      }
+      return this._prop;
+    }
+  }
+});
+var obj = new AClass();
+alert(obj.prop()); // getter -> "prop"
+obj.prop("hello"); // setter
+alert(obj.prop()); // getter -> "hello"
+</pre>
+このように実現できます。
+しかし、このままだと、変数が増えた際に定義が煩雑で面倒になり、ミスも発生しやすくなります。<br>
+理想を言えば、以下のように定義出来れば、すっきりしそうです。<br>
+<pre class="prettyprint lang-js no-run">
+var A = classify("A", {
+  accessor: { // <- define accessors.
+    prop: "prop",
+    prop2: "prop2",
+    prop3: "prop3",
+    /* ... */
+  }
+});
+</pre>
+そこで、'accessor' というメタ定義を作って、これを実現します。<br>
+以下が、アクセサを定義するmoduleです。<br>
+<pre class="prettyprint lang-js no-run">
 classify.addModule("accessor", function(context, key, value) {
 
-  // _'key' という名前のpropertyを定義します。
+  // _'key' という名前の property を context.property に追加定義します。デフォルトは value です。
   context.property['_'+key] = value;
 
-  // 'key' という名前のmethodを定義します。
+  // 'key' という名前の method を context.method に追加定義します。
   context.method[key] = function (v) {
-    if (0 < arguments.length) {
-      context.property['_'+key] = v;
-    }
-    return context.property['_'+key];
+    if (0 < arguments.length) this['_'+key] = v;
+    return this['_'+key];
   };
 
   // context を改造したら返す必要があります。
   return context;
 
 });
-
-// このようにすると、以下のような定義が
-var A = classify("A", {
+</pre>
+このようにすると、以下のような定義が<br>
+<pre class="prettyprint lang-js no-run">
+var AClass = classify("AClass", {
   accessor: {
     prop: "prop"
   }
 });
-
-// 実際は以下のように展開されます。
-var A = classify("A", {
+</pre>
+実際は以下のように展開されます。<br>
+<pre class="prettyprint lang-js no-run">
+var AClass = classify("AClass", {
   property: {
     _prop: "prop",
   },
@@ -317,65 +368,327 @@ var A = classify("A", {
     }
   }
 });
-
-// accessorを作ると、setter/getterが自動定義出来るわけです。
-
-var a = new A();
-
-a.prop(10); // setterを呼び出す
-a.prop();   // getterを呼び出す -> 10
-
-// moduleはremoveModuleで削除出来ます。
-classify.removeModule("accessor");
-
-
-/*
- ユーザー定義は再帰出来ます。
- すなわち,
-*/
-
-classify.addModule("accessors", function(context, key, value) {
-  context["accessor"] = context["accessor"] || {};
-  for (var i=value-1; -1 < i; i--) {
-    context["accessor"][key+i] = key+i;
-  }
+</pre>
+よって、
+<pre class="prettyprint lang-js">
+/*@
+classify.addModule("accessor", function(context, key, value) {
+  context.property['_'+key] = value;
+  context.method[key] = function (v) {
+    if (0 < arguments.length) this['_'+key] = v;
+    return this['_'+key];
+  };
   return context;
 });
-
-/*
-  のようなことができ
-*/
-
-// 以下のようにすると
-var A = classify("A", {
-  accessors: {
-    xxx: 3
-  }
-});
-
-// 以下のようになり
-var A = classify("A", {
+@*/var AClass = classify("AClass", {
   accessor: {
-    xxx0: "xxx0",
-    xxx1: "xxx1",
-    xxx2: "xxx2"
+    prop: "prop"
   }
 });
-
-// 最終的に以下のようになります。
-var A = classify("A", {
+var obj = new AClass();
+alert(obj.prop()); // -> "prop"
+obj.prop("hello");
+alert(obj.prop()); // -> "hello"
+</pre>
+やりたい事は実現できました。<br>
+<h4>8.4. 定義削除</h4>
+moduleはremoveModuleで削除出来ます。<br>
+<pre class="prettyprint lang-js no-run">
+classify.removeModule("accessor");
+</pre>
+<h4>8.5. 定義の再帰</h4>
+ユーザー定義は再帰出来ます。<br>
+たとえば、afterというモジュールを定義してみます。<br>
+<pre class="prettyprint lang-js no-run">
+classify.addModule("after", function(context, key, value) {
+  if (!(key in context.method))
+    throw Error('Declaration Error: after:"' + key + '" given but target method not found.');
+  var fn = context.method[key];
+  context.method[key] = function() {
+    var rt = fn.apply(this, arguments);
+    value.apply(this, arguments);
+    return rt;
+  };
+  return context;
+});
+</pre>
+このモジュールは、あるメソッドAがあった場合に、同名のメソッドAをafterで定義すると、<br>
+そのメソッドが、メソッドAの呼ばれた直後に必ず呼ばれるようになるという物です。(この形だと継承したメソッドには使えません)<br>
+<pre class="prettyprint lang-js">
+/*@
+classify.addModule("after", function(context, key, value) {
+  if (!(key in context.method))
+    throw Error('Declaration Error: after:"' + key + '" given but target method not found.');
+  var fn = context.method[key];
+  context.method[key] = function() {
+    var rt = fn.apply(this, arguments);
+    value.apply(this, arguments);
+    return rt;
+  };
+  return context;
+});
+@*/var BClass = classify("BClass", {
+  method: {
+    hello: function() { alert('hello!!'); }
+  },
+  after: {
+    hello: function() { alert('world!!'); }
+  }
+});
+var b = BClass();
+b.hello();
+// -> hello!!
+// -> world!!
+</pre>
+after や before (同じ要領で作れる) はそのままでもデバッグなどで使えそうですが、もうちょっとひねってみましょう。<br>
+変数の変更時に対してのオブザーバーを追加できる observable を定義します。
+<pre class="prettyprint lang-js no-run">
+classify.addModule("observable", function(context, key, value) {
+  var obs = [];
+  context.property["_"+key+"_observers"] = obs;
+  var a = {};
+  a[key] = value;
+  context = classify.expand(context, {accessor: a}); // accessor を展開 ... (2)
+  context['after'][key] = function(v) {              // after を定義 ... (1)
+    if (0 < arguments.length)
+      for (var i=0,l=obs.length; i < l; i++)
+        obs[i].call(this, v);
+  };
+  return context;
+}, function(context) {
+  context.static['observables'] = {};
+  context.method['addObserver'] = function(key, fn) {
+    var obs = this["_"+key+"_observers"];
+    if (obs && -1 == obs.indexOf(fn)) obs.push(fn);
+  }
+  context.method["removeObserver"] = function(key, fn) {
+    var obs = this["_"+key+"_observers"];
+    var pos; if (obs && -1 < (pos = obs.indexOf(fn))) return obs.splice(pos, 1);
+  };
+  return context;
+});
+</pre>
+これで、observable を使えば変数の変更時に発動するオブザーバーを追加できるようになります。<br>
+以下のように使います。<br>
+<pre class="prettyprint lang-js">
+/*@
+classify.addModule("accessor", function(context, key, value) {
+  context.property['_'+key] = value;
+  context.method[key] = function (v) {
+    if (0 < arguments.length) this['_'+key] = v;
+    return this['_'+key];
+  };
+  return context;
+});
+classify.addModule("after", function(context, key, value) {
+  if (!(key in context.method))
+    throw Error('Declaration Error: after:"' + key + '" given but target method not found.');
+  var fn = context.method[key];
+  context.method[key] = function() {
+    var rt = fn.apply(this, arguments);
+    value.apply(this, arguments);
+    return rt;
+  };
+  return context;
+});
+classify.addModule("observable", function(context, key, value) {
+  context.property["_"+key+"_observers"] = []; // これは実体化時にコピーされるので参照しても意味ない。
+  var a = {};
+  a[key] = value;
+  context = classify.expand(context, {accessor: a}); // accessor を展開 ... (2)
+  context.static['observables'][key] = context.method[key];
+  context['after'][key] = function(v) {              // after を定義 ... (1)
+    var obs = this["_"+key+"_observers"];
+    if (0 < arguments.length)
+      for (var i=0,l=obs.length; i < l; i++)
+        obs[i].call(this, v);
+  };
+  return context;
+}, function(context) {
+  context.static['observables'] = {};
+  context.method['addObserver'] = function(key, fn) {
+    var obs = this["_"+key+"_observers"];
+    if (obs && -1 == obs.indexOf(fn)) obs.push(fn);
+  }
+  context.method["removeObserver"] = function(key, fn) {
+    var obs = this["_"+key+"_observers"];
+    var pos; if (obs && -1 < (pos = obs.indexOf(fn))) return obs.splice(pos, 1);
+  };
+  return context;
+});
+@*/var CClass = classify("CClass", {
+  observable: {
+    foo: 'foo',
+    bar: 'bar'
+  }
+});
+var c = CClass();
+c.addObserver('foo', function(new_value) {
+  alert("set foo '"+ new_value + "' !!");
+});
+c.foo("baz"); // set foo 'baz' !!
+c.foo("qux"); // set foo 'qux' !!
+</pre>
+Observableの定義では、返しているcontextの中に、他のメタ定義が含まれているのが見て取れると思います。... (1)<br>
+ちなみに、classify.expandは与えられたdefinitionを最後まで展開した結果をcontextに追加して返します。 ... (2)<br>
+<pre class="prettyprint lang-js no-run">
+classify.expand(context, definition);
+</pre>
+以上のような関数になります。<br>
+ここでなぜ expand() しているかというと、after は accessor によって自動定義されたメソッドを対象にするので、<br>
+after と accessor を同時に context に入れて返してしまうと、after 展開時にて存在しないメソッドとしてエラーが発生するためです。<br>
+そこで、事前に expand() をつかって、明示的に展開しています。<br>
+<h4>8.6. 実用例2 | UI-Data-Binding の簡易的実装</h4>
+このobservableをつかって、さらに定義してみましょう。
+<pre class="prettyprint lang-js">
+var Linker = classify("Linker", {
   property: {
-    _xxx0: "xxx0",
-    /* ... */
+    linked: []
   },
   method: {
-    xxx0: function(v) { /* ... */ },
-    /* ... */
+    link: function(another) {
+      if (another instanceof Linker) {
+        if (this.linked.indexOf(another) < 0) {
+          for (var obs in this.__class__.observables) {
+            if (obs in another.__class__.observables) {
+              this.addObserver(obs, function(nval) {
+                var val = another[obs]();
+                if (val !== nval) another[obs](val);
+              });
+            }
+          }
+          this.linked.push(another);
+          another.link(this);
+        }
+      } else throw new Error("link() expects another LinkerObject. but you gave " + another.__class__.name);
+    }
+  }
+});
+</pre>
+Linker というクラスを定義しました。<br>
+このクラスは link() で他の Linker オブジェクトを受け取り、同名の observable 変数の状態をバインドします。<br>
+<pre class="prettyprint lang-js">
+var Elem = classify("Elem", {
+  parent: Linker,
+  property: {
+    elem: null,
+  }
+  method: {
+    init: function(selector, propname) {
+      this.elem = $(selector);
+      for (var obs in this.__class__.observables) (function(tgt) {
+        this.addObserver(obs, function(nval) {
+          if (tgt[propname]() !== nval) tgt[propname](nval);
+        });
+        var self = this;
+        tgt.on('keyup', function() {
+          self[obs](tgt[propname]());
+        });
+        tgt[propname](this[obs]());
+      }).call(this, $(obs, this.elem));
+    }
   }
 });
 
-</pre>
+var Form1 = classify("Form1", {
+  parent: Elem,
+  observable: {
+    ".input1": "",
+    ".input2": ""
+  },
+  method: {
+    init: function() { this.__super__().init.apply(this,arguments); }
+  }
+});
 
+var Table1 = classify("Table1", {
+  parent: Elem,
+  observable: {
+    ".input1": "",
+    ".input2": "",
+    ".input3": ""
+  },
+  method: {
+    init: function() { this.__super__().init.apply(this,arguments); }
+  }
+});
+
+var Form2 = classify("Form2", {
+  parent: Elem,
+  observable: {
+    ".input2": "",
+    ".input3": ""
+  },
+  method: {
+    init: function() { this.__super__().init.apply(this,arguments); }
+  }
+});
+</pre>
+このようなクラスを作り、
+<pre class="prettyprint lang-html">
+&lt;form id=&quot;form1&quot;&gt;
+  &lt;input type=&quot;text&quot; class=&quot;.input1&quot; value=&quot;&quot; /&gt;
+  &lt;input type=&quot;text&quot; class=&quot;.input2&quot; value=&quot;&quot; /&gt;
+&lt;/form&gt;
+&lt;table id=&quot;tbl&quot;&gt;
+  &lt;tr&gt;&lt;td&gt;1&lt;/td&gt;&lt;td class=&quot;.input1&quot;&gt;&lt;/td&gt;&lt;/tr&gt;
+  &lt;tr&gt;&lt;td&gt;2&lt;/td&gt;&lt;td class=&quot;.input2&quot;&gt;&lt;/td&gt;&lt;/tr&gt;
+  &lt;tr&gt;&lt;td&gt;3&lt;/td&gt;&lt;td class=&quot;.input3&quot;&gt;&lt;/td&gt;&lt;/tr&gt;
+&lt;/table&gt;
+&lt;form id=&quot;form2&quot;&gt;
+  &lt;input type=&quot;text&quot; class=&quot;.input2&quot; value=&quot;&quot; /&gt;
+  &lt;input type=&quot;text&quot; class=&quot;.input3&quot; value=&quot;&quot; /&gt;
+&lt;/form&gt;
+</pre>
+以上のようなHTMLページがあった際に、<br>
+以下のように使えます。
+<pre class="prettyprint lang-js">
+var f1 = Form1("#form1", 'value');
+var tbl = Table1("#tbl", 'html');
+var f2 = Form2("#form2", 'value');
+f1.link(tbl);
+tbl.link(f2);
+</pre>
+これで、フォームの値を変更すると、テーブル内部の情報、フォーム2の情報が自動的に変更されるのが確認できるでしょう。<br>
+最近流行の、UIDataBinding(MVVM) と呼ばれる機能が簡単に実装できました。<br>
+<br>
+<a href="">実際の動作例はこちら</a><br>
+<br><br><br><br>
 </div>
+<script>
+  function convert(raw) {
+    var code = raw.replace(/\&lt\;/g, '<').replace(/\&gt\;/g, '>').replace(/\&amp\;/g, '&'), html = raw;
+    var rexp;
+    "@@@@@@".match(/^(.+)$/);
+    do {
+      rexp = RegExp.$1;
+      var html = html.replace(/\/\*@\.\.\.([\s\S]+?)@\*\//, '/* ... */');
+      var code = code.replace(/\/\*@\.\.\.([\s\S]+?)@\*\//, 'RegExp1').replace(/RegExp1/, RegExp.$1);
+    } while (rexp != RegExp.$1);
+    "@@@@@@".match(/^(.+)$/);
+    do {
+      rexp = RegExp.$1;
+      var html = html.replace(/\/\*@([\s\S]+?)@\*\//, '');
+      var code = code.replace(/\/\*@([\s\S]+?)@\*\//, 'RegExp1').replace(/RegExp1/, RegExp.$1);
+    } while (rexp != RegExp.$1);
+    return {html: html, code: code};
+  }
+  $(".lang-js").each(function(i,v){
+    v = $(v);
+    if (v.hasClass('no-run')) return;
+    var conv = convert(v.html());
+    var html = conv.html, code = conv.code;
+    var a = $('<a>Run</a>').addClass("run-button").css({position: 'absolute', right: '10px', top: '10px'});
+    a.click(function(){
+      console.log(code);
+      eval(code);
+    });
+    var div = $('<div/>').css({position: 'relative'});
+    div.insertBefore(v);
+    v.appendTo(div);
+    v.after(a);
+    v.html(html);
+  });
+</script>
 </body>
 </html>
