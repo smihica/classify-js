@@ -138,35 +138,35 @@
     return false;
   }
 
-  var userModules = {};
+  var userDirectives = {};
 
   function expand (context, def) {
-    var i, k, t, modulenames = [],
+    var i, k, t, directivenames = [],
     base = "property,static,method,parent,mixin,implement".split(',');
-    for (i in userModules) modulenames.push(i);
+    for (i in userDirectives) directivenames.push(i);
 
     while (1) {
       var rec = false;
 
       for (i in def) {
         if (0 <= base.indexOf(i)) context[i] = def[i];
-        else if (0 <= modulenames.indexOf(i)) {
+        else if (0 <= directivenames.indexOf(i)) {
           if (hasProp(def[i])) rec = true;
         } else throw new ArgumentError(
           'You gave \'' + i + '\' as definition, but the classify() excepts' +
-            ' only "' + base.concat(modulenames).join(', ') + '".');
+            ' only "' + base.concat(directivenames).join(', ') + '".');
       }
 
       if (!rec) break;
 
-      for (i in userModules) context[i] = context[i] || {};
-      for (i in userModules) {
+      for (i in userDirectives) context[i] = context[i] || {};
+      for (i in userDirectives) {
         t = 0;
         for (k in def[i]) {
-          if (t == 0) context = userModules[i].one_time_fn(context);
-          if (context) context = userModules[i](context, k, def[i][k]);
-          if (!context) throw new DeclarationError('modules must return context. on module "' + i + '"');
-          delete def[i][k]; // for recursive module definition.
+          if (t == 0) context = userDirectives[i].one_time_fn(context);
+          if (context) context = userDirectives[i](context, k, def[i][k]);
+          if (!context) throw new DeclarationError('directives must return context. ON YOUR directive "' + i + '"');
+          delete def[i][k]; // for recursive directive definition.
           t++;
         }
       }
@@ -244,12 +244,12 @@
     return __class__;
   };
 
-  classify.addModule = function addModule(moduleName, fn, ofn) {
+  classify.addDirective = function addDirective(directiveName, fn, ofn) {
     fn.one_time_fn = ofn || function(c){return c};
-    userModules[moduleName] = fn;
+    userDirectives[directiveName] = fn;
   };
-  classify.removeModule = function removeModule(moduleName) {
-    delete userModules[moduleName];
+  classify.removeDirective = function removeDirective(directiveName) {
+    delete userDirectives[directiveName];
   };
   classify.expand = expand;
 

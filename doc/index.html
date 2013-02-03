@@ -10,11 +10,12 @@
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.9.0/jquery.min.js"></script>
 </head>
 <body onload="prettyPrint()">
+
+<div class="container">
 <a href="https://github.com/smihica/classify-js">
 <img style="position: absolute; top: 0; right: 0; border: 0;"
      src="https://s3.amazonaws.com/github/ribbons/forkme_right_red_aa0000.png" alt="Fork me on GitHub">
 </a>
-<div class="container">
 
 <ol class="menu">
 <li><a href="#basic">基本</a></li>
@@ -31,6 +32,7 @@
 <h1>ClassifyJS documentation</h1>
 <ul class="nav">
 <li><a href="http://github.com/smihica/classify-js">Code</a></li>
+<li><a href="https://raw.github.com/smihica/classify-js/master/classify.min.js">Download (classify.min.js)</a></li>
 <li><a href="">Documentation</a></li>
 </ul>
 </div>
@@ -43,7 +45,7 @@
 ライブラリコードも短いため持ち回りやすく、拡張性/柔軟性にすぐれており、十分に高速です。<br>
 よくあるやつですが、主な違いとして<br>
 <ul>
-  <li>なるべく小さくしている事。こういうのは何でも出来るようにしようとして大きくなりがち。これは200行程度</li>
+  <li>なるべく小さくしている事。これは200行程度 <a href="https://raw.github.com/smihica/classify-js/master/classify.min.gz.js">1.8KB (minify+gzip)</a></li>
   <li>メタ定義が出来るので、拡張性がある事。</li>
   <li>変数をちゃんとコピーする事。</li>
 </ul>
@@ -209,7 +211,6 @@ alert(d.breath());        // su-su-ga-!
 var Logger = classify("Logger", {
   method: {
     notificate : function(msg) {
-      console.log(this.__class__);
       alert(this.__class__.name + "." + arguments.callee.caller.name + "()\t-> " + msg);
     }
   }
@@ -276,22 +277,22 @@ DeclarationError: The class 'Dog' must provide property or method 'isParentOf' i
 メタ定義を使うと、複雑なクラスが簡潔に作れるようになり、<br>
 プログラムによるプログラミング（メタプログラミング）が行えます。<br>
 <h4>8.1. メタ定義関数</h4>
-モジュール追加<br>
-<strong>classify.addModule(moduleName, fn)</strong><br>
-モジュール削除<br>
-<strong>classify.removeModule(moduleName, fn)</strong><br>
+ディレクティブ追加<br>
+<strong>classify.addDirective(directiveName, fn)</strong><br>
+ディレクティブ削除<br>
+<strong>classify.removeDirective(directiveName, fn)</strong><br>
 <h4>8.2. 基本的な使い方</h4>
-<pre class="prettyprint lang-js no-run">
-classify.addModule("moduleName", function(context, key, value) {}, /* optional: function(context) {} */);
+<pre class="prettyprint lang-js" no_run="true">
+classify.addDirective("directiveName", function(context, key, value) {}, /* optional: function(context) {} */);
 </pre>
 
-第1引数に、定義するmoduleの名前を入れてください。<br>
+第1引数に、定義するdirectiveの名前を入れてください。<br>
 第2引数には、クラス定義の変換関数を書きます。<br>
 この変換関数の引数contextに classify( <strong>{...}</strong> ) に渡されるクラス定義オブジェクトが入ってきます。<br>
 実際にクラスを作る前に、これをいじってしまうというわけです。<br>
-引数key/valueが定義するモジュール名に与えられたオブジェクトのペアです。<br>
-第3引数には、オプションで、各モジュールにつき一回実行される変換関数を書きます。<br>
-定義された場合は、各モジュールが見つかった時点で始めに実行されます。<br>
+引数key/valueが定義するディレクティブをキーとして与えられたオブジェクトのペアです。<br>
+第3引数には、オプションで、各ディレクティブにつき一回実行される変換関数を書きます。<br>
+定義された場合は、各ディレクティブが見つかった時点で始めに実行されます。<br>
 <h4>8.3. 実用例1 | アクセサの自動定義</h4>
 例えば、プロパティーに変数と、その変数へのアクセサメソッドを定義したかったとします。<br>
 <pre class="prettyprint lang-js">
@@ -316,7 +317,7 @@ alert(obj.prop()); // getter -> "hello"
 このように実現できます。
 しかし、このままだと、変数が増えた際に定義が煩雑で面倒になり、ミスも発生しやすくなります。<br>
 理想を言えば、以下のように定義出来れば、すっきりしそうです。<br>
-<pre class="prettyprint lang-js no-run">
+<pre class="prettyprint lang-js" no_run="true">
 var A = classify("A", {
   accessor: { // <- define accessors.
     prop: "prop",
@@ -327,9 +328,9 @@ var A = classify("A", {
 });
 </pre>
 そこで、'accessor' というメタ定義を作って、これを実現します。<br>
-以下が、アクセサを定義するmoduleです。<br>
-<pre class="prettyprint lang-js no-run">
-classify.addModule("accessor", function(context, key, value) {
+以下が、アクセサを定義するdirectiveです。<br>
+<pre class="prettyprint lang-js" no_run="true">
+classify.addDirective("accessor", function(context, key, value) {
 
   // _'key' という名前の property を context.property に追加定義します。デフォルトは value です。
   context.property['_'+key] = value;
@@ -346,7 +347,7 @@ classify.addModule("accessor", function(context, key, value) {
 });
 </pre>
 このようにすると、以下のような定義が<br>
-<pre class="prettyprint lang-js no-run">
+<pre class="prettyprint lang-js" no_run="true">
 var AClass = classify("AClass", {
   accessor: {
     prop: "prop"
@@ -354,7 +355,7 @@ var AClass = classify("AClass", {
 });
 </pre>
 実際は以下のように展開されます。<br>
-<pre class="prettyprint lang-js no-run">
+<pre class="prettyprint lang-js" no_run="true">
 var AClass = classify("AClass", {
   property: {
     _prop: "prop",
@@ -370,17 +371,8 @@ var AClass = classify("AClass", {
 });
 </pre>
 よって、
-<pre class="prettyprint lang-js">
-/*@
-classify.addModule("accessor", function(context, key, value) {
-  context.property['_'+key] = value;
-  context.method[key] = function (v) {
-    if (0 < arguments.length) this['_'+key] = v;
-    return this['_'+key];
-  };
-  return context;
-});
-@*/var AClass = classify("AClass", {
+<pre class="prettyprint lang-js" include_prev="3">
+var AClass = classify("AClass", {
   accessor: {
     prop: "prop"
   }
@@ -392,15 +384,15 @@ alert(obj.prop()); // -> "hello"
 </pre>
 やりたい事は実現できました。<br>
 <h4>8.4. 定義削除</h4>
-moduleはremoveModuleで削除出来ます。<br>
-<pre class="prettyprint lang-js no-run">
-classify.removeModule("accessor");
+directiveはremoveDirectiveで削除出来ます。<br>
+<pre class="prettyprint lang-js" no_run="true">
+classify.removeDirective("accessor");
 </pre>
 <h4>8.5. 定義の再帰</h4>
 ユーザー定義は再帰出来ます。<br>
-たとえば、afterというモジュールを定義してみます。<br>
-<pre class="prettyprint lang-js no-run">
-classify.addModule("after", function(context, key, value) {
+たとえば、afterというディレクティブを追加してみます。<br>
+<pre class="prettyprint lang-js" no_run="true">
+classify.addDirective("after", function(context, key, value) {
   if (!(key in context.method))
     throw Error('Declaration Error: after:"' + key + '" given but target method not found.');
   var fn = context.method[key];
@@ -412,22 +404,10 @@ classify.addModule("after", function(context, key, value) {
   return context;
 });
 </pre>
-このモジュールは、あるメソッドAがあった場合に、同名のメソッドAをafterで定義すると、<br>
+このディレクティブは、あるメソッドAがあった場合に、同名のメソッドAを after で定義すると、<br>
 そのメソッドが、メソッドAの呼ばれた直後に必ず呼ばれるようになるという物です。(この形だと継承したメソッドには使えません)<br>
-<pre class="prettyprint lang-js">
-/*@
-classify.addModule("after", function(context, key, value) {
-  if (!(key in context.method))
-    throw Error('Declaration Error: after:"' + key + '" given but target method not found.');
-  var fn = context.method[key];
-  context.method[key] = function() {
-    var rt = fn.apply(this, arguments);
-    value.apply(this, arguments);
-    return rt;
-  };
-  return context;
-});
-@*/var BClass = classify("BClass", {
+<pre class="prettyprint lang-js" include_prev="1">
+var BClass = classify("BClass", {
   method: {
     hello: function() { alert('hello!!'); }
   },
@@ -441,20 +421,21 @@ b.hello();
 // -> world!!
 </pre>
 after や before (同じ要領で作れる) はそのままでもデバッグなどで使えそうですが、もうちょっとひねってみましょう。<br>
-変数の変更時に対してのオブザーバーを追加できる observable を定義します。
-<pre class="prettyprint lang-js no-run">
-classify.addModule("observable", function(context, key, value) {
-  var obs = [];
-  context.property["_"+key+"_observers"] = obs;
+変数の変更時に対してのオブザーバーを追加できる変数を定義する observable ディレクティブを定義します。
+<pre class="prettyprint lang-js" no_run="true">
+classify.addDirective("observable", function(context, key, value) {
+  context.property["_"+key+"_observers"] = []; // これは実体化時にコピーされるので参照しても意味がない。
   var a = {};
   a[key] = value;
   context = classify.expand(context, {accessor: a}); // accessor を展開 ... (2)
   context['after'][key] = function(v) {              // after を定義 ... (1)
+    var obs = this["_"+key+"_observers"];
     if (0 < arguments.length)
       for (var i=0,l=obs.length; i < l; i++)
         obs[i].call(this, v);
   };
-  return context;
+  context.static['observables'][key] = context.method[key];
+  return context;                                    // after が含まれたまま返す ... (1)
 }, function(context) {
   context.static['observables'] = {};
   context.method['addObserver'] = function(key, fn) {
@@ -468,55 +449,11 @@ classify.addModule("observable", function(context, key, value) {
   return context;
 });
 </pre>
+observable の定義では、返している context の中に、他のメタ定義が含まれているのが見て取れると思います。... (1)<br>
 これで、observable を使えば変数の変更時に発動するオブザーバーを追加できるようになります。<br>
 以下のように使います。<br>
-<pre class="prettyprint lang-js">
-/*@
-classify.addModule("accessor", function(context, key, value) {
-  context.property['_'+key] = value;
-  context.method[key] = function (v) {
-    if (0 < arguments.length) this['_'+key] = v;
-    return this['_'+key];
-  };
-  return context;
-});
-classify.addModule("after", function(context, key, value) {
-  if (!(key in context.method))
-    throw Error('Declaration Error: after:"' + key + '" given but target method not found.');
-  var fn = context.method[key];
-  context.method[key] = function() {
-    var rt = fn.apply(this, arguments);
-    value.apply(this, arguments);
-    return rt;
-  };
-  return context;
-});
-classify.addModule("observable", function(context, key, value) {
-  context.property["_"+key+"_observers"] = []; // これは実体化時にコピーされるので参照しても意味ない。
-  var a = {};
-  a[key] = value;
-  context = classify.expand(context, {accessor: a}); // accessor を展開 ... (2)
-  context.static['observables'][key] = context.method[key];
-  context['after'][key] = function(v) {              // after を定義 ... (1)
-    var obs = this["_"+key+"_observers"];
-    if (0 < arguments.length)
-      for (var i=0,l=obs.length; i < l; i++)
-        obs[i].call(this, v);
-  };
-  return context;
-}, function(context) {
-  context.static['observables'] = {};
-  context.method['addObserver'] = function(key, fn) {
-    var obs = this["_"+key+"_observers"];
-    if (obs && -1 == obs.indexOf(fn)) obs.push(fn);
-  }
-  context.method["removeObserver"] = function(key, fn) {
-    var obs = this["_"+key+"_observers"];
-    var pos; if (obs && -1 < (pos = obs.indexOf(fn))) return obs.splice(pos, 1);
-  };
-  return context;
-});
-@*/var CClass = classify("CClass", {
+<pre class="prettyprint lang-js" include_prev="1,3,8">
+var CClass = classify("CClass", {
   observable: {
     foo: 'foo',
     bar: 'bar'
@@ -529,9 +466,8 @@ c.addObserver('foo', function(new_value) {
 c.foo("baz"); // set foo 'baz' !!
 c.foo("qux"); // set foo 'qux' !!
 </pre>
-Observableの定義では、返しているcontextの中に、他のメタ定義が含まれているのが見て取れると思います。... (1)<br>
 ちなみに、classify.expandは与えられたdefinitionを最後まで展開した結果をcontextに追加して返します。 ... (2)<br>
-<pre class="prettyprint lang-js no-run">
+<pre class="prettyprint lang-js" no_run="true">
 classify.expand(context, definition);
 </pre>
 以上のような関数になります。<br>
@@ -540,7 +476,7 @@ after と accessor を同時に context に入れて返してしまうと、afte
 そこで、事前に expand() をつかって、明示的に展開しています。<br>
 <h4>8.6. 実用例2 | UI-Data-Binding の簡易的実装</h4>
 このobservableをつかって、さらに定義してみましょう。
-<pre class="prettyprint lang-js">
+<pre class="prettyprint lang-js" no_run="true" include_prev="3,5,10">
 var Linker = classify("Linker", {
   property: {
     linked: []
@@ -551,10 +487,12 @@ var Linker = classify("Linker", {
         if (this.linked.indexOf(another) < 0) {
           for (var obs in this.__class__.observables) {
             if (obs in another.__class__.observables) {
-              this.addObserver(obs, function(nval) {
-                var val = another[obs]();
-                if (val !== nval) another[obs](val);
-              });
+              (function(obs) {
+                this.addObserver(obs, function(nval) {
+                  var val = another[obs]();
+                  if (val !== nval) another[obs](nval);
+                });
+              }).call(this, obs);
             }
           }
           this.linked.push(another);
@@ -567,25 +505,27 @@ var Linker = classify("Linker", {
 </pre>
 Linker というクラスを定義しました。<br>
 このクラスは link() で他の Linker オブジェクトを受け取り、同名の observable 変数の状態をバインドします。<br>
-<pre class="prettyprint lang-js">
+<pre class="prettyprint lang-js" no_run="true" include_prev="1">
 var Elem = classify("Elem", {
   parent: Linker,
   property: {
-    elem: null,
-  }
+    elem: null
+  },
   method: {
     init: function(selector, propname) {
       this.elem = $(selector);
-      for (var obs in this.__class__.observables) (function(tgt) {
-        this.addObserver(obs, function(nval) {
-          if (tgt[propname]() !== nval) tgt[propname](nval);
-        });
-        var self = this;
-        tgt.on('keyup', function() {
-          self[obs](tgt[propname]());
-        });
-        tgt[propname](this[obs]());
-      }).call(this, $(obs, this.elem));
+      for (var obs in this.__class__.observables)
+        (function(obs) {
+          var tgt = $(obs, this.elem);
+          this.addObserver(obs, function(nval) {
+            if (tgt[propname]() !== nval) tgt[propname](nval);
+          });
+          var self = this;
+          tgt.keyup(function() {
+            self[obs](tgt[propname]());
+          });
+          tgt[propname](this[obs]());
+        }).call(this, obs);
     }
   }
 });
@@ -627,35 +567,71 @@ var Form2 = classify("Form2", {
 このようなクラスを作り、
 <pre class="prettyprint lang-html">
 &lt;form id=&quot;form1&quot;&gt;
-  &lt;input type=&quot;text&quot; class=&quot;.input1&quot; value=&quot;&quot; /&gt;
-  &lt;input type=&quot;text&quot; class=&quot;.input2&quot; value=&quot;&quot; /&gt;
+  &lt;input type=&quot;text&quot; class=&quot;input1&quot; value=&quot;&quot; /&gt;
+  &lt;input type=&quot;text&quot; class=&quot;input2&quot; value=&quot;&quot; /&gt;
 &lt;/form&gt;
 &lt;table id=&quot;tbl&quot;&gt;
-  &lt;tr&gt;&lt;td&gt;1&lt;/td&gt;&lt;td class=&quot;.input1&quot;&gt;&lt;/td&gt;&lt;/tr&gt;
-  &lt;tr&gt;&lt;td&gt;2&lt;/td&gt;&lt;td class=&quot;.input2&quot;&gt;&lt;/td&gt;&lt;/tr&gt;
-  &lt;tr&gt;&lt;td&gt;3&lt;/td&gt;&lt;td class=&quot;.input3&quot;&gt;&lt;/td&gt;&lt;/tr&gt;
+  &lt;tr&gt;&lt;td&gt;1&lt;/td&gt;&lt;td class=&quot;input1&quot;&gt;&lt;/td&gt;&lt;/tr&gt;
+  &lt;tr&gt;&lt;td&gt;2&lt;/td&gt;&lt;td class=&quot;input2&quot;&gt;&lt;/td&gt;&lt;/tr&gt;
+  &lt;tr&gt;&lt;td&gt;3&lt;/td&gt;&lt;td class=&quot;input3&quot;&gt;&lt;/td&gt;&lt;/tr&gt;
 &lt;/table&gt;
 &lt;form id=&quot;form2&quot;&gt;
-  &lt;input type=&quot;text&quot; class=&quot;.input2&quot; value=&quot;&quot; /&gt;
-  &lt;input type=&quot;text&quot; class=&quot;.input3&quot; value=&quot;&quot; /&gt;
+  &lt;input type=&quot;text&quot; class=&quot;input2&quot; value=&quot;&quot; /&gt;
+  &lt;input type=&quot;text&quot; class=&quot;input3&quot; value=&quot;&quot; /&gt;
 &lt;/form&gt;
 </pre>
 以上のようなHTMLページがあった際に、<br>
 以下のように使えます。
-<pre class="prettyprint lang-js">
-var f1 = Form1("#form1", 'value');
+<pre class="prettyprint lang-js" include_prev="1">
+var f1 = Form1("#form1", 'val');
 var tbl = Table1("#tbl", 'html');
-var f2 = Form2("#form2", 'value');
+var f2 = Form2("#form2", 'val');
 f1.link(tbl);
 tbl.link(f2);
+/*@
+$('#example-description').html('OK: フォームに入力してみてください');
+@*/
 </pre>
-これで、フォームの値を変更すると、テーブル内部の情報、フォーム2の情報が自動的に変更されるのが確認できるでしょう。<br>
-最近流行の、UIDataBinding(MVVM) と呼ばれる機能が簡単に実装できました。<br>
+<h4>実際の動作例はこちら(<span id="example-description">上のRunを押してください</span>)</h4>
+<div class="forms">
+  <div>
+  <form id="form1">
+  <h5>フォーム1</h5>
+  <table>
+  <tr><td>mail-address:</td><td><input type="text" class="input1" value="" placeholder="mail-address"/></td></tr>
+  <tr><td>password:</td><td><input type="password" class="input2" value="" placeholder="password"/></td></tr>
+  <tr><td>--</td><td>--</td></tr>
+  </table>
+  </form>
+  </div>
+  <div>
+  <h5>データテーブル</h5>
+  <table id="tbl">
+  <tr><td>mail-address:</td><td class="input1"></td></tr>
+  <tr><td>password:</td><td class="input2"></td></tr>
+  <tr><td>name:</td><td class="input3"></td></tr>
+  </table>
+  </div>
+  <div>
+  <h5>フォーム2</h5>
+  <form id="form2">
+  <table>
+  <tr><td>--</td><td>--</td></tr>
+  <tr><td>password:</td><td><input type="text" class="input2" value="" placeholder="password"/></td></tr>
+  <tr><td>name:</td><td><input type="text" class="input3" value="" placeholder="name"/></td></tr>
+  </table>
+  </form>
+  </div>
+</div>
 <br>
-<a href="">実際の動作例はこちら</a><br>
-<br><br><br><br>
+これで、フォーム1の値を変更すると、データテーブル内部の情報、フォーム2の情報が自動的に変更されるのが確認できるでしょう。<br>
+最近流行の、UI-Data-Binding (MVVM) と呼ばれる機能が簡単に実装できました。<br>
+<br>
+<br>
+<br>
 </div>
 <script>
+(function() {
   function convert(raw) {
     var code = raw.replace(/\&lt\;/g, '<').replace(/\&gt\;/g, '>').replace(/\&amp\;/g, '&'), html = raw;
     var rexp;
@@ -673,11 +649,22 @@ tbl.link(f2);
     } while (rexp != RegExp.$1);
     return {html: html, code: code};
   }
+  var codes = [];
   $(".lang-js").each(function(i,v){
     v = $(v);
-    if (v.hasClass('no-run')) return;
     var conv = convert(v.html());
-    var html = conv.html, code = conv.code;
+    var html = conv.html;
+    var code = (function(now) {
+      var prev, code = '';
+      if (prev = v.attr('include_prev')) {
+        prev = prev.split(',');
+        for (var i=prev.length-1; -1 < i; i--) prev[i] = parseInt(prev[i]);
+        prev.sort(function(a, b){return a - b});
+        for (var i=prev.length-1; -1 < i; i--) code += codes[now-prev[i]];
+      }
+      return code + conv.code;
+    })(i);
+    codes.push(code);
     var a = $('<a>Run</a>').addClass("run-button").css({position: 'absolute', right: '10px', top: '10px'});
     a.click(function(){
       console.log(code);
@@ -686,9 +673,10 @@ tbl.link(f2);
     var div = $('<div/>').css({position: 'relative'});
     div.insertBefore(v);
     v.appendTo(div);
-    v.after(a);
+    if (!v.attr('no_run')) v.after(a);
     v.html(html);
   });
+})();
 </script>
 </body>
 </html>

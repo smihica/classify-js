@@ -6,13 +6,25 @@ html {
     min-height: 100%;
 }
 
+a {
+    color: #F51;
+    font-weight: bold;
+}
+a:hover {
+    color: #FF0;
+    text-decoration: none;
+}
+h3 a, h3 a:hover {
+    color: #333;
+}
+
 body {
     min-height: 100%;
     background: #EEE;
     font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
     font-size: 13px;
     line-height: 25px;
-    color: #444;
+    color: #333;
     margin: 0; padding: 0;
 }
 
@@ -33,6 +45,7 @@ pre {
     width: 900px;
     margin: 0 auto 0 auto;
     padding: 20px;
+    position: relative;
 }
 
 .nav {
@@ -44,6 +57,7 @@ pre {
     width: 250px;
     border: 1px solid #666;
     padding-left: 20px;
+    margin-top: 70px;
 }
 
 .menu li {
@@ -84,3 +98,32 @@ h4 {
     top:1px;
 }
 
+.forms {
+    border:1px solid #999;
+    border-radius: 10px;
+    padding: 20px;
+    display: -webkit-box;
+    display: -moz-box;
+}
+.forms h5 {
+    line-height: 100%;
+    margin: 10px;
+}
+
+.forms div {
+    -webkit-box-flex: 1;　/* Safari,Google Chrome用 */  
+    -moz-box-flex: 1;
+    border-left: 1px dotted #666;
+}
+
+.forms div:first-child {
+    border:none;
+}
+
+.forms table {
+    width: 250px;
+}
+.forms table tr td:first-child {
+    text-align: right;
+    width:90px;
+}
