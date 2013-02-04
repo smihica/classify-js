@@ -105,3 +105,7 @@ exports.testClassProperties = function(test) {
   test.ok(Waiter.waiter);
   test.done();
 };
+
+// TODO: tests of ArgumentErrors.
+//       tests of directives.
+//       case test. document.

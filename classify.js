@@ -141,8 +141,12 @@
   var userDirectives = {};
 
   function expand (context, def) {
+
+    if (!def) return context;
+
     var i, k, t, directivenames = [],
     base = "property,static,method,parent,mixin,implement".split(',');
+
     for (i in userDirectives) directivenames.push(i);
 
     while (1) {
@@ -178,15 +182,16 @@
   };
 
   var classify = function classify(name, def) {
+    var __class__, i, j, l, k, c, type, context;
 
-    if (typeof name !== 'string' && def === void(0)) return classify(genclassid(), name);
-    if (!(typeof name === 'string' && def instanceof Object)) // TODO: check is def a plainObject or no.
-      throw new ArgumentError('Expects classify(name, definition) or classify(definition).');
+    if ((l = arguments.length) == 1) return (typeof name !== 'string') ? classify(genclassid(), name) : classify(name, {});
+    else if (!(l == 2 && typeof name === 'string' && def instanceof Object)) // TODO: check is def a plainObject or no ?
+      throw new ArgumentError('Expects classify(name, definition) or classify(name) or classify(definition).');
 
     if (!name.match(/^[a-zA-Z_$][a-zA-Z0-9_$]*$/))
       throw new ArgumentError('You give "' + name + '" as class name. But class name must be a valid variable name in JavaScript.');
 
-    var __class__, i, j, l, k, c, def, type, context = {
+    context = {
       property:   {},
       static:     {},
       method:     {},
