@@ -179,7 +179,9 @@
 
   var classify = function classify(name, def) {
 
-    if (name instanceof Object && !name instanceof String && def === void(0)) return classify(genclassid(), name);
+    if (typeof name !== 'string' && def === void(0)) return classify(genclassid(), name);
+    if (!(typeof name === 'string' && def instanceof Object)) // TODO: check is def a plainObject or no.
+      throw new ArgumentError('Expects classify(name, definition) or classify(definition).');
 
     if (!name.match(/^[a-zA-Z_$][a-zA-Z0-9_$]*$/))
       throw new ArgumentError('You give "' + name + '" as class name. But class name must be a valid variable name in JavaScript.');
