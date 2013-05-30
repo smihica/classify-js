@@ -388,40 +388,46 @@ directiveはremoveDirectiveで削除出来ます。<br>
 <pre class="prettyprint lang-js" no_run="true">
 classify.removeDirective("accessor");
 </pre>
-<h4>8.5. 定義の再帰</h4>
-ユーザー定義は再帰出来ます。<br>
-たとえば、afterというディレクティブを追加してみます。<br>
+<h4>8.5. 実用例2 | メソッドコンビネーション</h4>
+afterというディレクティブを追加してみます。<br>
 <pre class="prettyprint lang-js" no_run="true">
+function find_method_recursively(_class, name) {
+  return ((_class) ? (_class.prototype[name] || find_method_recursively(_class.__proto__, name)) : null);
+};
 classify.addDirective("after", function(context, key, value) {
-  if (!(key in context.method))
-    throw Error('Declaration Error: after:"' + key + '" given but target method not found.');
-  var fn = context.method[key];
+  var meth = context.method[key] || find_method_recursively(context.parent, key);
+  if (!meth) throw new Error('Declaration Error: after "' + key + '" is given but the target method not found.');
   context.method[key] = function() {
-    var rt = fn.apply(this, arguments);
+    var rt = meth.apply(this, arguments);
     value.apply(this, arguments);
     return rt;
   };
   return context;
 });
 </pre>
-このディレクティブは、あるメソッドAがあった場合に、同名のメソッドAを after で定義すると、<br>
-そのメソッドが、メソッドAの呼ばれた直後に必ず呼ばれるようになるという物です。(この形だと継承したメソッドには使えません)<br>
+このディレクティブは、あるメソッドAがあった場合に、同名のメソッドAを after 内部で定義すると、<br>
+そのメソッドが、元々のメソッドAが呼ばれた直後に必ず呼ばれるようになるという物です。<br>
 <pre class="prettyprint lang-js" include_prev="1">
 var BClass = classify("BClass", {
   method: {
     hello: function() { alert('hello!!'); }
-  },
+  }
+});
+var CClass = classify("CClass", {
+  parent: BClass,
   after: {
     hello: function() { alert('world!!'); }
   }
 });
-var b = BClass();
-b.hello();
+var c = CClass();
+c.hello();
 // -> hello!!
 // -> world!!
 </pre>
-after や before (同じ要領で作れる) はそのままでもデバッグなどで使えそうですが、もうちょっとひねってみましょう。<br>
-変数の変更時に対してのオブザーバーを追加できる変数を定義する observable ディレクティブを定義します。
+after や before (同じ要領で作れる) はメソッドコンビネーションといい、とても有用です。
+<h4>8.6. 定義の再帰</h4>
+ユーザー定義は再帰出来ます。<br>
+先に作った、afterを使い、変数の変更時に対してのオブザーバーを追加できる変数を定義する observable ディレクティブを定義します。
 <pre class="prettyprint lang-js" no_run="true">
 classify.addDirective("observable", function(context, key, value) {
   context.property["_"+key+"_observers"] = []; // これは実体化時にコピーされるので参照しても意味がない。
@@ -475,7 +481,7 @@ classify.expand(context, definition);
 after と accessor を同時に context に入れて返してしまうと、after 展開時にて存在しないメソッドとしてエラーが発生するためです。<br>
 そこで、事前に expand() をつかって、明示的に展開しています。<br>
 <h4>8.6. 実用例2 | UI-Data-Binding の簡易的実装</h4>
-このobservableをつかって、さらに定義してみましょう。
+このobservableをつかって、最近流行のMVVMパターン(UI-Data-Binding)を実装してみましょう。
 <pre class="prettyprint lang-js" no_run="true" include_prev="3,5,10">
 var Linker = classify("Linker", {
   property: {
